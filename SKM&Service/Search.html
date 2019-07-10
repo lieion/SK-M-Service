@@ -40,6 +40,27 @@
         margin-bottom: 20px;
         border: 1px solid #bcbcbc;
       }
+      .context-menus {
+        position: absolute;
+        display: none;
+        border: 1px solid black;
+        width: 100px;
+        text-align: center;
+      }
+
+      .context-menus.active {
+        display: block;
+        background-color: white;
+      }
+
+      .context-menus.active>ul>li {
+        list-style: none;
+        padding: 10px;
+      }
+
+      .context-menus.active>ul>li:hover {
+        background-color: lightgreen;
+      }  
      
       label { 
           display: inline-block;
@@ -80,7 +101,7 @@
             }
         </style>
     <script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js'></script>
-    <script src="https://rawgit.com/neo4j-contrib/neovis.js/master/dist/neovis.js"></script>
+    
     <script src="js/neovis.js"></script> <!-- neovis neo4j에 있는 것을 그래프로 옮겨옴  //-->
     <script src="js/jquery.js"></script> <!-- 제이쿼리 //-->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
@@ -201,6 +222,13 @@
       
       
     </div>
+    <div id="context-menus" class="context-menus">
+        <ul>
+          <li>확장</li>
+          <li>정보 제시</li>
+        </ul>
+      </div>
+
   </body>
 </html>
 
