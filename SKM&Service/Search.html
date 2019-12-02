@@ -1,77 +1,95 @@
+<!--
+  전체적으로 화면에 보이는 부분을 담당하는 부분
+-->
 <!doctype html>
 <html lang="ko">
   <head>
     <meta charset="utf-8">
     <title>CSS</title>
     <style>
+      /* 전체 테두리를 꾸미는 역할 */
+      a{
+        text-decoration: none;
+        color:black;
+      }
       #jb-container {
         width: 1200px;
         margin: 0px auto;
         padding: 20px;
         border: 1px solid #bcbcbc;   
-
       }
+      /* 제일 윗 부분 제목 부분을 담당한다 */
       #jb-header {
         padding: 20px;
         margin-bottom: 20px;
         background: #a2a2a2;
       }
+      /* 연관거리, 연관 상품 최대 개수 지정하는 부분*/
       #jb-tool {
         padding: 20px;
         margin-bottom: 20px;
         border: 1px solid #bcbcbc;
       }
+      /* 검색 기능이 들어가는 부분 */
       #jb-searchbar {
         height: 100px;
         padding: 20px;
         margin-bottom: 20px;
         border: 1px solid #bcbcbc;
       }
+      /* Graph DB가 들어가는 부분이다. */
       #jb-content {
         
         padding: 20px;
         margin-bottom: 20px;
         border: 1px solid #bcbcbc;
       }
-
+      /* 노드를 클릭해서 그 노드의 상품 정보가 나오는 부분 */
       #jb-footer {
         height: 100px;
         padding: 20px;
         margin-bottom: 20px;
         border: 1px solid #bcbcbc;
       }
+      #jb-length {
+        height: 100px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #bcbcbc;
+      }
+      .context-menus {
+        height: 300px;
+        position: absolute;
+        display: none;
+        border: 1px solid black;
+        width: 150px;
+        text-align: center;
+      }
+      .context-menus.active {
+        display: block;
+        background-color: white;
+      }
+      .context-menus.active>ul>li {
+        list-style: none;
+        padding: 10px;
+      }
+      .context-menus.active>ul>li:hover {
+        background-color: lightgreen;
+      }  
      
       label { 
           display: inline-block;
           width: 10em;
       }
       <script>
-
-
-          
+        $(".jb-length").hide();
+        $(".jb-footer").hide();
+        
       </script>
     </style> <!-- 각 레이아웃 부분 스타일 정의  //-->
-
-
-    <style type="text/css">
-        #viz {
-            border-color: #00FF00;
-            width: 900px;
-
-            height: 700px;
-
-            border: 1px solid lightgray;
-
-            font: 22pt arial;
-
-        }
-
-
-
-    </style>
-
-
-    <title>neo4j sample</title>	<!-- 페이지 이름  //-->
+  
+    <!-- Neovis에서 글자 크기를 이것으로 조절하려고 했는데 잘 되지 않음 -->
+    <title>neo4j sample</title> <!-- 페이지 이름  //-->
         <style type="text/css">
             #viz{
                 width: 1150px;
@@ -79,13 +97,18 @@
                 float:middle;
             }
         </style>
-    <script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js'></script>
+  
+    
     <script src="https://rawgit.com/neo4j-contrib/neovis.js/master/dist/neovis.js"></script>
     <script src="js/neovis.js"></script> <!-- neovis neo4j에 있는 것을 그래프로 옮겨옴  //-->
-    <script src="js/jquery.js"></script> <!-- 제이쿼리 //-->
+    <script src="js/jquery.js"></script>  <!--제이쿼리 //-->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <script src='js/excelexportjs.js'></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
 
     <style type="text/css">
+      /* mynetwork는 클릭부분을 담당하고 있다.*/
       #mynetwork {
         width: 600px;
         height: 400px;
@@ -95,101 +118,114 @@
   </head>
   <body>
 
-  	<script> 
-    var num=3; 
-    var limit_num=250;
-    var search_text="몽벨";
-    var kkk="default";
-    var jsoned3=1151183;
+    <script> 
+    var num=3; //연관 거리  default= 3
+    var limit_num=250; // 연관 상품 최대 출력 개수 default=250
+    var search_text="몽벨"; // 연관 상품 검색 default= "몽벨"
+    var jsoned3=1151183; // 상품 ID default= 1151183
+    var center_of_graph=1151183;
+    var searched="SKM&Service";
+    var linkofsearch="https://search.naver.com/search.naver?sm=top_hty&fbm=0&ie=utf8&query="+searched;
+    var File_info_Json_Array= new Array();
+    var File_info_Json_Array_Final = new Array();
+    var data = JSON.stringify(File_info_Json_Array);
+    var cyphermethod = new String();
+    var Searching_history= new Array();
     </script>
-    <div id="jb-container"><!-- 전체 틀  //-->
+    <div id="jb-container" class="jb-container"><!-- 전체 틀  //-->
       <div id="jb-header"> <!-- 전체적 제목 이름  //-->
-        <h1>Benepia Graphic DB</h1> <!--  //-->
+        <h1><a href="Search.html">Benepia Graphic DB</a></h1> <!--  페이지 header부분의 큰 제목 //--> 
       </div>
 
 
 
     <div id="jb-tool">
-    	연관거리 : <input type="number" id="input" max=5 min=1>
-		<button onclick="ioput()">설정</button>
-		<br>연관 상품 최대 수 : <input type="number" id="li_input" max=250 min=0>
-		<button onclick="limit_ioput()">설정</button>
-    
-		<!-- 아래부터 자바스크립트 -->
-		<script type="text/javascript">
-		var temp; 
-
-		function ioput(){
+      연관거리 : <input type="number" id="input" max=5 min=1> <!-- 연관 거리를 받는 입력 폼: 입력 가능 최댓값: 5, 최솟값: 1-->
+    <button onclick="ioput()">설정</button> <!--  입력 폼에 연관 거리를 설정하게 하는 버튼, 클릭시 ioput()함수 실행 //-->
+    <br>연관 상품 최대 수 : <input type="number" id="li_input" max=250 min=0> <!--  연관 상품 최대 출력 개수를 설정하는 입력폼 입력가능 최댓 값 250, 최소 0 -->
+    <button onclick="limit_ioput()">설정</button>
+    <div id="dvjson"></div>
+    <button id='DLtoExcel' class="btn btn-danger" onclick="making_Excel()" >Export Data to Excel</button>
+    </br>
+    <button onclick='sample();'>캡처</button>
+    <!-- 아래부터 자바스크립트 -->
+    <script type="text/javascript">
+    var temp; 
+    /*
+      var input: 연관 거리를 받는 입력 폼에서 숫자를 받아와서 저장한다.
+      1~5 범위의 수인 경우 지정된 연관 거리를 변경하고 그래프를 그려주지만 그렇지 않은 경우 경고문을 띄우고 다시 입력하게 한다.
+    */
+    function ioput(){ 
         var input = document.getElementById("input").value;
-        if(input>5 || input<1){
-            alert("write valid number!!!!(1~5)");
+        if(input>5 || input<1){ // 사용자가 억지로 1~5 범위의 숫자를 넣지 않으면 경고문을 통해서 다시 입력하게 한다. 
+            alert("write valid number!!!!(1~5)"); 
         }
         else{
-            num = input;
-        draw();
+            num = input; //제대로 된 범위의 숫자를 넣어만 draw()함수를 실행하게 한다. 
+            draw();
         }
     }
+    /*
+      var input: 연관 상품 최대 개수를 입력하는 입력 폼에서 사용자가 입력한 정보를 받아오고 input에 저장한다. 
+      0~250범위의 숫자가 아닌 경우 경고문을 띄운다. 이외의 경우에는 지정된 limit_num을 입력 받은 값으로 변경하고 
+      draw()함수를 이용하여 GraphDB를 다시 그려준다
+    */
     function limit_ioput(){
     var input = document.getElementById("li_input").value; 
-    if(input>250 || input<1){
-            alert("write valid number!!!!(1~250)");
+    if(input>250 || input<0){
+            alert("write valid number!!!!(0~250)");
         }
         else{
             limit_num = input;
-        draw();
+            draw();
         }
     }
-
-    function search_ioput(){
-      var input = get_pid(); 
-      console.log(input);
-    }
-
     
-  
-
-
-
-		</script>
+    </script>
 
     </div>
-
+    <!-- 검색기능이 들어가있는 부분이다.  //-->
     <div id="jb-searchbar">
-      <br><input type="text" id="search_input" width= 1000px>
-      <button onclick="search_ioput()">검색</button>
+
+      <br><input type="text" id="search_input" > <!--  검색어를 입력하는 부분이다. id는 search_input//-->
+
+      <!--
+      /// 검색어를 입력하고 <enter>를 치더라도 검색 누른 것과 똑같이 실행되도록 keylistener를 추가 ///
+        
+      /// ///
+      -->
+      <button onclick="search_ioput()">검색</button> <!-- 검색을 클릭하면 search_ioput()함수가 실행되는 버튼이다. //-->
       <form name="ppid_form">
-        <br><input type="text" name= "ppid" id="ppid" value= jsoned3 readonly/>
+        <br><input type="text" name= "ppid" id="ppid" value= jsoned3 readonly/> <!-- 클릭한 노드 정보를  읽을 수만 있게 폼안에서 제공되는 부분이다. -->
       </form>
-      <button onclick="pid_ioput()">보여주기</button>
+      
       
       <script>
-        function search_ioput(){
+        /*
+          var input : 검색어를 입력하는 입력폼에서 사용자가 입력한 정보를 받아와서 넣어줌
+          이후 search_text를 input값으로 변경해준 뒤 draw_by_name() 함수를 실행한다. 
+        */
+        function search_ioput(){ 
           var input = document.getElementById("search_input").value; 
           search_text=input;
           draw_by_name();
-        }
-        function pid_ioput(){
-          draw_by_id();
         }
         
       </script>
 
     </div>
-
-    <div id="jb-footer">
-        결과: <br>
-          <pre id="eventSpan"></pre>
-
-
-      </div>
+    <!-- 
+      노드 클릭 부분의 역할을 하는 부분이다. 
+    -->
+    
     <div id="jb-content">
       <script
         integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
 
-        crossorigin="anonymous"></script>
+        crossorigin="anonymous"></script> <!-- 보안상의 이유로 필요하다는 듯 하다 -->
        <script type="text/javascript" src=JS.js>   </script>
-    <body onload="draw()" float=right>
-        <div id="viz" float=middle></div>
+    <body onload="draw()" float=right> <!-- JS.js에서 정의된 draw()를 실행하여 Graph DB를 jb-content에 그려준다 -->
+        <div id="viz" float=middle></div> 
         <script> console.log(self) </script>
         <script>
           console.log(jsoned3);
@@ -198,19 +234,36 @@
     </body>
 
       </div>
-      
+      <div id="jb-footer" class="jb-footer"> 
+        상품 정보: <br>
+          <pre id="eventSpan"></pre>  <!-- neovis.js으로 부터 클릭에 대한 정보를 받아온다. (innerHTML) -->
+      </div>
+      <div id="jb-length" class="jb-length"> 
+            <pre id="lengthInfo"></pre>  <!-- neovis.js으로 부터 클릭에 대한 정보를 받아온다. (innerHTML) -->
+      </div>
       
     </div>
+    
+    <div id="context-menus" class="context-menus"> <!-- 우클릭 시 메뉴의 역할 -->
+        <ul>
+          <li><a href="javascript:draw_by_menu()"> 확장</a></li>
+
+          <li><a href="javascript:show_Length()">거리</a></li>
+
+          <li><a href="javascript:show_Info()">정보</a></li>
+
+          <li><a href="javascript:search_tool_internet()" target="_blank">검색</a></li>
+
+          <li><a href="javascript:draw_Union()"> 연장</a></li>
+
+        </ul>
+        <h2 id="context_information">
+      </div>
+       <script src="js/click_event.js"></script>
+    
+
   </body>
+
+  
+
 </html>
-
-
-
-<!--
-  network.on("click", function (params) {
-        params.event = "[original event]";
-        document.getElementById('eventSpan').innerHTML = '<h2>Click event:</h2>' + JSON.stringify(params, null, 4);
-        console.log('click event, getNodeAt returns: ' + this.getNodeAt(params.pointer.DOM));
-    });
-
-    //-->

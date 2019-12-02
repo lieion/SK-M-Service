@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>SK M&Service</title>
+  <!-- Bootstrap core JavaScript-->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Core plugin JavaScript-->
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+  <!-- Custom scripts for all pages-->
+  <script src="js/sb-admin-2.min.js"></script>
+  <!-- Page level plugins -->
+  <script src="vendor/chart.js/Chart.min.js"></script>
+  <script src="js/click_event.js"></script>
+  <!-- Page level custom scripts -->
+  <script src="js/demo/chart-area-demo.js"></script>
+  <script src="js/demo/chart-pie-demo.js"></script>
+  <script src="js/neovis.js"></script>  <!--neovis neo4j에 있는 것을 그래프로 옮겨옴  //-->
+  
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+  <script src='js/excelexportjs.js'></script>
+  <script integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script> <!-- 보안상의 이유로 필요하다는 듯 하다 -->
+  <script type="text/javascript" src=JS.js></script>
+  <!-- Custom fonts for this template-->
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+  <!-- Custom styles for this template-->
+  <link href="css/sb-admin-2.min.css" rel="stylesheet">
+  <style>
+  #jb-content {
+      width: 100%;
+      height: 800px;
+  }
+  
+  #viz{
+      width: 100%;
+      height: 800px;
+      font-size:10px;
+  }
+  #jb-length{
+
+  }
+  #jb-footer{
+    
+  }
+  .context-menus {
+    height: 220px;
+    position: absolute;
+    display: none;
+    border: 1px solid black;
+    width: 50px;
+    text-align: center;
+  }
+
+  .context-menus.active {
+    display: block;
+    background-color: white;
+  }
+
+  .context-menus.active>ul>li {
+  }
+
+  .context-menus.active>ul>li:hover {
+  }  
+ 
+  label { 
+      display: inline-block;
+      width: 10em;
+  }
+node {
+  diameter: 50px;
+  color: #A5ABB6;
+  border-color: #9AA1AC;
+  border-width: 2px;
+  text-color-internal: #FFFFFF;
+  font-size: 10px;
+}
+
+relationship {
+  color: #A5ABB6;
+  shaft-width: 1px;
+  font-size: 8px;
+  padding: 3px;
+  text-color-external: #000000;
+  text-color-internal: #FFFFFF;
+  caption: '<type>';
+}
+
+node.Department {
+  color: #2B7A78;
+  border-color: #2B7A78;
+  text-color-internal: #FFFFFF;
+  caption: '{title}';
+}
+
+node.Method {
+  color: #2B7A78;
+  border-color: #2B7A78;
+  text-color-internal: #FFFFFF;
+  caption: '{name}';
+} 
+  </style>
+</head>
+  <script> 
+  var num=1; //연관 거리  default= 3
+  var limit_num=50; // 연관 상품 최대 출력 개수 default=250
+  var search_text="몽벨"; // 연관 상품 검색 default= "몽벨"
+  var jsoned4="1151183"; // 상품 ID default= 1151183
+  var center_of_graph="1151183";
+  var searched="SKM&Service";
+  var cyphermethod=""
+  var linkofsearch="https://search.naver.com/search.naver?sm=top_hty&fbm=0&ie=utf8&query="+searched;
+  var File_info_Json_Array= new Array();
+  var File_info_Json_Array_Check= new Array();
+  var File_info_Json_Array_Final = new Array();
+  var got_table_temp = location.href.split("?");
+  var got_table_data=got_table_temp[1].split(":");
+  var gotbytable = decodeURI(decodeURIComponent(got_table_data[0]));
+  var data = JSON.stringify(File_info_Json_Array);
+  var temp;
+  if(gotbytable!=null){
+    center_of_graph=gotbytable;
+  }
+  //var got_table_temp = location.href.split("?");
+  //var got_table_data=got_table_temp[1].split(":");
+  //var gotbytable = decodeURI(decodeURIComponent(got_table_data[0]));
+  //if(gotbytable!=null){
+  //  center_of_graph=gotbytable;
+  //}
+  function reDraw(){
+	  num = $("#depth").val();
+	  limit_num = $("#maxCnt").val();
+	  draw();
+  }
+  /*
+    var input: 연관 거리를 받는 입력 폼에서 숫자를 받아와서 저장한다.
+    1~5 범위의 수인 경우 지정된 연관 거리를 변경하고 그래프를 그려주지만 그렇지 않은 경우 경고문을 띄우고 다시 입력하게 한다.
+  */
+  function ioput(){ 
+      var input = document.getElementById("input").value;
+      if(input>5 || input<1){ // 사용자가 억지로 1~5 범위의 숫자를 넣지 않으면 경고문을 통해서 다시 입력하게 한다. 
+          alert("write valid number!!!!(1~5)"); 
+      }
+      else{
+          num = input; //제대로 된 범위의 숫자를 넣어만 draw()함수를 실행하게 한다. 
+          draw();
+      }
+  }
+
+  /*
+    var input: 연관 상품 최대 개수를 입력하는 입력 폼에서 사용자가 입력한 정보를 받아오고 input에 저장한다. 
+    0~250범위의 숫자가 아닌 경우 경고문을 띄운다. 이외의 경우에는 지정된 limit_num을 입력 받은 값으로 변경하고 
+    draw()함수를 이용하여 GraphDB를 다시 그려준다
+  */
+  function limit_ioput(){
+  var input = document.getElementById("li_input").value; 
+  if(input>250 || input<0){
+          alert("write valid number!!!!(0~250)");
+      }
+      else{
+          limit_num = input;
+          draw();
+      }
+  }  
+  
+  /*
+  var input : 검색어를 입력하는 입력폼에서 사용자가 입력한 정보를 받아와서 넣어줌
+  이후 search_text를 input값으로 변경해준 뒤 draw_by_name() 함수를 실행한다. 
+	*/
+	function search_ioput(){ 
+	  var input = document.getElementById("search_input").value; 
+	  search_text=input;
+	  location.href="tables.html?" + encodeURI(encodeURIComponent(input))+":"+encodeURI(encodeURIComponent(input));
+	}  
+
+	function ZoomIn (event) {
+	    $("#viz").width(
+	        $("#viz").width() * 1.2
+	    );
+
+	    $("#viz").height(
+	        $("#viz").height() * 1.2
+	    );
+	}
+
+	function  ZoomOut (event) {
+
+	    $("#viz").width(
+	        $("#viz").width() * 0.8
+	    );
+
+	    $("#viz").height(
+	        $("#viz").height() * 0.8
+	    );
+	}
+	
+	//전체화면
+	function openFullScreenMode(){
+		var docV = document.documentElement;
+		isFull=true;
+		if(docV.requestFullscreen)
+			docV.requestFullscreen();
+		else if(docV.webkitRequestFullscreen) //chrome, safari
+			docV.webkitRequestFullscreen();
+		else if(docV.mozRequestFullScreen) //firebox
+			docV.mozRequestFullScreen();
+		else if(docV.msRequestFullscreen)  //IE or Edge
+			docV.msRequestFullscreen();
+	}
+  </script>
+  
+<body id="page-top">
+
+  <!-- Page Wrapper -->
+  <div id="wrapper">
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+      <!-- Main Content -->
+      <div id="content">
+
+        <!-- Topbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+          <!-- Sidebar Toggle (Topbar) -->
+          <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+          	<i class="fa fa-bars"></i>
+          </button>
+          <div style="font-size: 25px;font-weight: bold;letter-spacing: -1px;">BENEPIA 상품연관 관계분석</div>
+		  <div style="padding-left:50px">
+		  	연관거리 : <input type="number" id="depth" max=5 min=1 value=1>
+		  </div>
+		  <div style="padding-left:10px">
+		  	최대출력 상품수 : <input type="number"  id="maxCnt" max=250 min=10 value=50>
+		  </div>
+		  <div style="padding-left:10px">
+		  	<button onclick="reDraw()">적용</button>
+		  </div>
+          <!-- Topbar Search -->
+          <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search" style="padding-left:50px;width:30%">
+            <div class="input-group">
+              <input type="text" class="form-control bg-light border-0 small" placeholder="검색할 상품명을 입력하세요." aria-label="Search" aria-describedby="basic-addon2" id="search_input" onkeypress="if(event.keyCode==13) {search_ioput(); return false;}">
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="button" onclick="search_ioput()">
+                  <i class="fas fa-search fa-sm"></i>
+                </button>
+              </div>
+            </div>
+            
+          </form>
+          <div style="position: absolute;right: 0;padding-right: 20px;">
+			<a href="#;" onClick="ZoomIn();">화면확대</a>&nbsp;|&nbsp;
+			<a href="#;" onClick="ZoomOut();">화면축소</a>&nbsp;|&nbsp; 
+			<a href="#;" onClick="openFullScreenMode();">전체화면</a> 
+		  </div>
+        </nav>
+        <!-- End of Topbar -->
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Graph -->
+            <div class="col-lg-12">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">
+                  <div id="jb-length" class="jb-length" style="display:inline-block"><h6 id="lengthInfo" class="m-0 text-info"></h6></div>
+				  &nbsp;&nbsp;&nbsp;&nbsp;<div id="jb-footer" class="jb-footer" style="display:inline-block"><h6 id="eventSpan" class="m-0 "></h6></div>                  
+                  </h6>
+                  <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                      <div class="dropdown-header">Graph Option</div>
+                      <a class="dropdown-item" href="#">Action</a>
+                      <a class="dropdown-item" href="#">Another action</a>
+                      <div class="dropdown-divider"></div>
+                      <a class="dropdown-item" onclick="making_Excel()">Export Data to Excel</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body" >
+                  <div id="jb-content">
+                          <div id="viz" style="font-size:9px">검색어를 입력하세요</div> 
+                  </div>
+                </div>
+              </div>
+            </div>  
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+
+      </div>
+      <!-- End of Main Content -->
+
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>Copyright &copy; SK M&Service 2019</span>
+          </div>
+        </div>
+      </footer>
+      <!-- End of Footer -->
+
+    </div>
+    <!-- End of Content Wrapper -->
+
+  </div>
+  <!-- End of Page Wrapper -->
+
+  <!-- Scroll to Top Button-->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <!-- Logout Modal-->
+  <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+          <a class="btn btn-primary" href="login.html">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 우클릭시 메뉴 -->
+  <div id="context-menus" class="context-menus dropdown-menu dropdown-menu-right shadow animated--fade-in">
+    <div class="dropdown-header text-primary">기능</div>
+    <div class="dropdown-divider"></div>
+    <a href="javascript:draw_by_menu()" class="dropdown-item"> 확장</a>
+    <a href="javascript:show_Length()" class="dropdown-item">거리</a>
+    <a href="javascript:show_Info()" class="dropdown-item">정보</a>
+    <a href="javascript:search_tool_internet()" target="_blank" class="dropdown-item">검색</a>
+    <a href="javascript:draw_Union()" class="dropdown-item"> 연장</a>
+  </div>
+
+</body>
+
+</html>
